@@ -1,46 +1,51 @@
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
-local startScreen = playerGui:WaitForChild("StartScreen", 10)
-if startScreen then
-    local mainHolder = startScreen:WaitForChild("MainHolder", 10)
-    if mainHolder then
-        local confirmPrompt = mainHolder:WaitForChild("ConfirmPrompt", 10)
-        if confirmPrompt then
-            local secondConfirmPrompt = confirmPrompt:FindFirstChild("ConfirmPrompt", true)
-            if secondConfirmPrompt then
-                local function waitForRender(gui)
-                    if not gui then return end
-                    while gui.AbsoluteSize.X == 0 or gui.AbsoluteSize.Y == 0 do
-                        gui:GetPropertyChangedSignal("AbsoluteSize"):Wait()
-                    end
-                    while gui.AbsolutePosition.X == 0 and gui.AbsolutePosition.Y == 0 do
-                        gui:GetPropertyChangedSignal("AbsolutePosition"):Wait()
-                    end
-                end
+local startScreen = playerGui:WaitForChild("StartScreen")
+local mainHolder = startScreen:WaitForChild("MainHolder")
+local confirmPrompt = mainHolder:WaitForChild("ConfirmPrompt")
 
-                for _, child in ipairs(secondConfirmPrompt:GetChildren()) do
-                    if child.Name == "Yes" then
-                        local spawnButton = mainHolder:FindFirstChild("Spawn", true)
+-- Procura o segundo ConfirmPrompt dentro do primeiro
+local secondConfirmPrompt = confirmPrompt:FindFirstChild("ConfirmPrompt", true)
+if not secondConfirmPrompt then return end
 
-                        waitForRender(secondConfirmPrompt)
-                        waitForRender(child)
+-- Função para garantir que o GUI foi renderizado
+local function waitForRender(gui)
+	if not gui then return end
+	
+	-- Espera o tamanho existir
+	while gui.AbsoluteSize.X == 0 or gui.AbsoluteSize.Y == 0 do
+		gui:GetPropertyChangedSignal("AbsoluteSize"):Wait()
+	end
+	
+	-- Espera posição existir
+	while gui.AbsolutePosition.X == 0 and gui.AbsolutePosition.Y == 0 do
+		gui:GetPropertyChangedSignal("AbsolutePosition"):Wait()
+	end
+end
 
-                        if spawnButton then
-                            waitForRender(spawnButton)
+-- Loop pelos botões do ConfirmPrompt
+for _, child in ipairs(secondConfirmPrompt:GetChildren()) do
+	if child.Name == "Yes" then
 
-                            local relX = spawnButton.AbsolutePosition.X - secondConfirmPrompt.AbsolutePosition.X
-                            local relY = spawnButton.AbsolutePosition.Y - secondConfirmPrompt.AbsolutePosition.Y
+		local spawnButton = mainHolder:FindFirstChild("Spawn", true)
+		if not spawnButton then return end
 
-                            local offsetX = 22 * (1600 / 1366)
-                            local offsetY = 0
+		-- Garante que tudo carregou na tela
+		waitForRender(secondConfirmPrompt)
+		waitForRender(child)
+		waitForRender(spawnButton)
 
-                            child.AnchorPoint = Vector2.new(0, 0)
-                            child.Position = UDim2.new(0, relX + offsetX, 0, relY + offsetY)
-                        end
-                    end
-                end
-            end
-        end
-    end
+		-- Calcula posição relativa
+		local relX = spawnButton.AbsolutePosition.X - secondConfirmPrompt.AbsolutePosition.X
+		local relY = spawnButton.AbsolutePosition.Y - secondConfirmPrompt.AbsolutePosition.Y
+
+		-- Ajuste de offset
+		local offsetX = 22 * (1600 / 1366)
+		local offsetY = 0
+
+		-- Move o botão Yes
+		child.AnchorPoint = Vector2.new(0, 0)
+		child.Position = UDim2.new(0, relX + offsetX, 0, relY + offsetY)
+	end
 end
